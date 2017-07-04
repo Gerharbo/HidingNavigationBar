@@ -44,6 +44,8 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 	weak open var delegate: HidingNavigationBarManagerDelegate?
 	
 	open var refreshControl: UIRefreshControl?
+    
+    open var contentInset:UIEdgeInsets = .zero
 	
 	fileprivate var navBarController: HidingViewController
 	fileprivate var extensionController: HidingViewController
@@ -71,6 +73,9 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
         
 		self.viewController = viewController
 		self.scrollView = scrollView
+        
+        // Save initial contentInset
+        self.contentInset = self.scrollView.contentInset
 		
 		// Create extensionController
 		extensionController = HidingViewController()
@@ -178,7 +183,7 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 	
 	open func shouldScrollToTop(){
 		// update content Inset
-		let top = statusBarHeight() + navBarController.totalHeight()
+		let top = statusBarHeight() + navBarController.totalHeight() + contentInset.top
 		updateScrollContentInsetTop(top)
 
 		_ = navBarController.snap(false, completion: nil)
@@ -273,7 +278,7 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 			}
 			
 			// 3 - Update contracting variable
-			if Float(fabs(deltaY)) > FLT_EPSILON {
+			if Float(fabs(deltaY)) > .ulpOfOne {
 				if deltaY < 0 {
 					currentState = .Contracting
 				} else {
@@ -324,7 +329,8 @@ open class HidingNavigationBarManager: NSObject, UIScrollViewDelegate, UIGesture
 	}
 	
 	fileprivate func updateContentInsets() {
-		let navBarBottomY = navBarController.view.frame.origin.y + navBarController.view.frame.size.height
+        
+		let navBarBottomY = navBarController.view.frame.origin.y + navBarController.view.frame.size.height + contentInset.top
 		let top: CGFloat
 		if extensionController.isContracted() == false {
 			top = extensionController.view.frame.origin.y + extensionController.view.bounds.size.height
